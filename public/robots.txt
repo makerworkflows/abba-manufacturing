@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://abbamfg.com/sitemap.xml
