@@ -120,5 +120,53 @@
       }
     </script>
     <div id="root"></div>
+  <!-- Speed-to-Lead: MWS Lead Intake Worker Integration -->
+  <script>
+    (function () {
+      // Wait for React to render the form, then intercept submission
+      var MAX_ATTEMPTS = 50;
+      var attempts = 0;
+      var interval = setInterval(function () {
+        attempts++;
+        var forms = document.querySelectorAll("form");
+        if (forms.length === 0 && attempts < MAX_ATTEMPTS) return;
+        clearInterval(interval);
+
+        forms.forEach(function (form) {
+          form.addEventListener("submit", function () {
+            // Collect field values after React handles its own state
+            setTimeout(function () {
+              var get = function (n) {
+                var el = form.querySelector('[name="' + n + '"]');
+                return el ? el.value : "";
+              };
+              var fullName = get("fullName") || get("name") || "";
+              var parts = fullName.split(" ");
+              var payload = {
+                client: "abba",
+                first_name: parts[0] || "",
+                last_name: parts.slice(1).join(" ") || "",
+                email: get("email"),
+                phone: get("phone"),
+                service_type: get("product") || get("productType") || "",
+                message: get("message"),
+              };
+              // Only fire if we captured something meaningful
+              if (payload.first_name || payload.email || payload.phone) {
+                fetch(
+                  "https://mws-lead-intake.makerworkflows.workers.dev/lead",
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                  }
+                ).catch(function () {});
+              }
+            }, 100);
+          });
+        });
+      }, 200);
+    })();
+  </script>
   </body>
 </html>
